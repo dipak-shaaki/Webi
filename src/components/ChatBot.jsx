@@ -33,39 +33,45 @@ const ChatBot = ({ isOpen, onToggle }) => {
         setInputText('')
         setIsTyping(true)
 
-        // 2. Simulate Bot Response
-        setTimeout(() => {
-            const botResponse = generateResponse(userMsg.text)
-            setMessages(prev => [...prev, { id: Date.now() + 1, text: botResponse, isBot: true }])
-            setIsTyping(false)
-        }, 1000)
+        try {
+            // 2. Try to get AI response from Backend
+            // Note: Change this URL once you deploy your backend (e.g. to Render)
+            const response = await fetch('http://localhost:5000/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: text,
+                    history: messages.slice(-5) // Send last 5 messages for context
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setMessages(prev => [...prev, { id: Date.now() + 1, text: data.reply, isBot: true }]);
+            } else {
+                throw new Error('Backend offline');
+            }
+        } catch (error) {
+            // 3. Fallback to hardcoded logic if backend is down
+            console.log("Using fallback bot logic...");
+            const botResponse = generateFallbackResponse(text);
+            setMessages(prev => [...prev, { id: Date.now() + 1, text: botResponse, isBot: true }]);
+        } finally {
+            setIsTyping(false);
+        }
     }
 
-    const generateResponse = (text) => {
+    const generateFallbackResponse = (text) => {
         const lower = text.toLowerCase()
-
-        // 1. "Let's do this" / Work inquiry -> Mail me
         if (lower.includes("let's do") || lower.includes("lets do") || lower.includes("hire") || lower.includes("project")) {
-            return (
-                <span>
-                    Sounds like a plan! 🚀 <a href="mailto:your-email@outlook.com" className="underline font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800">Mail me</a> and let's make it happen.
-                </span>
-            )
+            return "Sounds like a plan! 🚀 Mail me at shanki.dipak@gmail.com and let's make it happen."
         }
-
-        // 2. "Tell me about yourself" -> Humorous
         if (lower.includes("about yourself") || lower.includes("who are you")) {
-            return "I'm a designer who turns coffee into code and confusion into clarity. ☕️✨ I spend half my time aligning pixels and the other half wondering why 'divs' won't center. But hey, it looks good in the end!"
+            return "I'm Dipak's AI. I focus on MERN/SERN stack development and solving complex problems with code."
         }
-
-        // Default responses
         if (lower.includes('hello') || lower.includes('hi'))
             return "Hello there! How can I help you today?"
-
-        if (lower.includes('price') || lower.includes('cost'))
-            return "My rates are like my designs: premium but worth every penny. Mail me for a quote!"
-
-        return "That's interesting! Why don't you mail me to discuss it further?"
+        return "That's interesting! I'm currently running in 'offline mode'. Once Dipak connects my brain (Gemini API), I'll be able to answer much better!"
     }
 
     return (
@@ -81,10 +87,12 @@ const ChatBot = ({ isOpen, onToggle }) => {
                     {/* Header */}
                     <div className="bg-gray-900 dark:bg-gray-800 p-4 flex items-center justify-between text-white">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 font-bold font-serif text-lg">D</div>
+                            <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 font-bold font-serif text-lg overflow-hidden">
+                                <img src={`${import.meta.env.BASE_URL}hunxa.jpg`} alt="D" className="w-full h-full object-cover" />
+                            </div>
                             <div>
-                                <h3 className="font-bold text-sm">Dipak Bot</h3>
-                                <p className="text-xs text-gray-400">Online • Replies jokingly</p>
+                                <h3 className="font-bold text-sm">Dipak AI</h3>
+                                <p className="text-xs text-gray-400">Digital Clone • Active Now</p>
                             </div>
                         </div>
                         <button onClick={onToggle} className="p-2 hover:bg-white/10 rounded-full transition-colors">

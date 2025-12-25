@@ -5,13 +5,13 @@ const About = () => {
     const imagePath = `${import.meta.env.BASE_URL}image.jpg`;
 
     return (
-        <div className="w-full h-full flex items-center justify-center relative transition-colors duration-500 bg-cream dark:bg-dark-bg">
+        <div className="w-full min-h-full md:h-full flex items-start md:items-center justify-center relative transition-colors duration-500 bg-cream dark:bg-dark-bg overflow-y-auto md:overflow-hidden custom-scrollbar">
 
             {/* Container with top spacing and scale for desktop */}
-            <div className="w-full h-full max-w-[1700px] flex flex-col md:flex-row px-6 md:px-12 lg:px-20 pt-32 md:pt-20 pb-16 relative md:scale-[0.8] origin-center">
+            <div className="w-full h-auto md:h-full max-w-[1700px] flex flex-col md:flex-row px-6 md:px-12 lg:px-20 pt-32 md:pt-20 pb-32 md:pb-16 relative md:scale-[0.8] origin-center">
 
                 {/* LEFT SIDE: Text Content */}
-                <div className="w-full md:w-1/2 h-full flex flex-col justify-center space-y-6 md:space-y-8 z-10">
+                <div className="w-full md:w-1/2 h-auto md:h-full flex flex-col justify-center space-y-8 md:space-y-8 z-10">
                     {/* Header Area */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}

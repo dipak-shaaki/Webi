@@ -18,9 +18,18 @@ const Sidebar = ({ currentView, onNavigate }) => {
         >
             {/* Left: Copyright */}
             <div className="pointer-events-auto">
-                <span className="text-[10px] font-montserrat tracking-[0.3em] text-gray-400 opacity-60 uppercase whitespace-nowrap">
-                    © 2025 DIPAK
-                </span>
+                <AnimatePresence>
+                    {currentView === 'home' && (
+                        <motion.span
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 0.6 }}
+                            exit={{ opacity: 0 }}
+                            className="text-[10px] font-montserrat tracking-[0.3em] text-gray-400 uppercase whitespace-nowrap"
+                        >
+                            © 2025 DIPAK
+                        </motion.span>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Center: Socials or Back to Home */}

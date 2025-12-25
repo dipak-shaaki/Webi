@@ -22,12 +22,11 @@ const Contact = () => {
         setStatus('submitting')
 
         try {
-            // Using the direct email endpoint (no /f/) which is more reliable for simple setups
-            const response = await fetch('https://formspree.io/shanki.dipak@gmail.com', {
+            // Priority 1: Our own PostgreSQL Backend
+            const response = await fetch('http://localhost:5000/api/contact', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
                 },
                 body: JSON.stringify(formData)
             })
@@ -37,10 +36,8 @@ const Contact = () => {
                 setFormData({ name: '', email: '', service: '', message: '' })
                 setTimeout(() => setStatus('idle'), 5000)
             } else {
-                const data = await response.json()
-                console.error('Submission error:', data)
-                setStatus('error')
-                setTimeout(() => setStatus('idle'), 4000)
+                // If backend fails, we could fallback or show error
+                throw new Error('Backend failed');
             }
         } catch (error) {
             console.error('Submission error:', error)
@@ -56,7 +53,7 @@ const Contact = () => {
             <div className="w-full h-full max-w-[1700px] flex flex-col md:flex-row px-4 md:px-12 pt-16 md:pt-20 pb-16 relative md:scale-[0.8] origin-center">
 
                 {/* LEFT SIDE: The Form */}
-                <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-4 md:px-12 order-2 md:order-1 pt-6 md:pt-0">
+                <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-4 md:px-12 order-2 md:order-1 pt-16 md:pt-0">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -108,15 +105,15 @@ const Contact = () => {
                                     disabled={status === 'submitting' || status === 'success'}
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    className={`relative h-14 md:h-16 px-10 md:px-14 rounded-full font-montserrat font-medium text-base md:text-lg transition-all duration-500 ${status === 'success'
-                                        ? 'bg-green-600 text-white w-full md:w-48'
+                                    className={`relative h-14 md:h-16 px-12 md:px-16 rounded-full font-montserrat font-medium text-base md:text-lg transition-all duration-500 w-max ${status === 'success'
+                                        ? 'bg-green-600 text-white'
                                         : status === 'error'
-                                            ? 'bg-red-600 text-white w-full md:w-64'
-                                            : 'bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto'
+                                            ? 'bg-red-600 text-white'
+                                            : 'bg-blue-600 hover:bg-blue-700 text-white'
                                         }`}
                                 >
                                     <AnimatePresence mode="wait">
-                                        {status === 'idle' && <motion.span key="idle">Send Message</motion.span>}
+                                        {status === 'idle' && <motion.span key="idle">Send</motion.span>}
                                         {status === 'submitting' && (
                                             <motion.span key="submitting" className="flex items-center gap-2">
                                                 <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
@@ -127,14 +124,13 @@ const Contact = () => {
                                             </motion.span>
                                         )}
                                         {status === 'success' && <motion.span key="success">✔ Sent!</motion.span>}
-                                        {status === 'error' && <motion.span key="error">Check email to activate!</motion.span>}
+                                        {status === 'error' && <motion.span key="error">Error! Try later</motion.span>}
                                     </AnimatePresence>
                                 </motion.button>
 
                                 {status === 'error' && (
                                     <p className="text-[10px] font-montserrat text-red-500 bg-white/10 p-2 rounded">
-                                        Formspree sent an "Activation" email to **shanki.dipak@gmail.com**. <br />
-                                        Open it and click "Active" for the form to work.
+                                        Server is currently offline. Please try again later or reach out via email.
                                     </p>
                                 )}
                             </div>
