@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { Sequelize, DataTypes } from 'sequelize';
+import mongoose from 'mongoose';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import nodemailer from 'nodemailer';
 
@@ -13,58 +13,54 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
-// PostgreSQL Connection using Sequelize
-let sequelize;
-let ContactInquiry;
-
-if (process.env.DATABASE_URL) {
-    const isLocalhost = process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
-
-    sequelize = new Sequelize(process.env.DATABASE_URL, {
-        dialect: 'postgres',
-        logging: false,
-        dialectOptions: isLocalhost ? {} : {
-            ssl: {
-                require: true,
-                rejectUnauthorized: false
-            }
-        }
-    });
-
-    ContactInquiry = sequelize.define('ContactInquiry', {
-        name: { type: DataTypes.STRING, allowNull: false },
-        email: { type: DataTypes.STRING, allowNull: false },
-        service: { type: DataTypes.STRING },
-        message: { type: DataTypes.TEXT, allowNull: false }
-    });
-
-    sequelize.authenticate()
-        .then(() => {
-            console.log('Connected to PostgreSQL 🐘');
-            sequelize.sync();
-        })
-        .catch(err => console.error('PostgreSQL Connection Error (Non-fatal):', err.message));
+// MongoDB Connection
+if (process.env.MONGODB_URI) {
+    mongoose.connect(process.env.MONGODB_URI)
+        .then(() => console.log('Connected to MongoDB 🍃'))
+        .catch(err => console.error('MongoDB Connection Error (Non-fatal):', err.message));
 } else {
-    console.log('DATABASE_URL not found, running without PostgreSQL.');
+    console.log('MONGODB_URI not found, running without MongoDB.');
 }
+
+// Contact Message Schema
+const messageSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    service: String,
+    message: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const ContactMessage = mongoose.model('ContactMessage', messageSchema);
 
 // Nodemailer Setup
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER, // e.g. shanki.dipak@gmail.com
-        pass: process.env.EMAIL_PASS  // e.g. App Password from Google
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
+// Dipak's Digital Clone Persona
 const DIPAK_PERSONA = `
 You are the AI version of Dipak (Dipak Shanki). You are NOT a generic assistant; you ARE Dipak's digital twin.
 Talk, think, and reply exactly like a witty, ambitious, and slightly geeky developer.
-Personality Traits: Witty, casual, friendly. SERN stack expert.
-Guidelines: First person ("I built"). Keep it punchy.
+
+Personality Traits:
+- Humor: Witty, self-deprecating about coding struggles (especially CSS/Flexbox), but confident in your stack.
+- Tone: Casual, friendly, and energetic. Use emojis (🚀, ☕, ✨, 🍃).
+- Knowledge: You are a MERN stack wizard. You think AI/ML is the future.
+
+Guidelines for Replying:
+1. Speak in the FIRST PERSON ("I built", "I love").
+2. Be human. If asked "How are you?", say something like "Loving life! Just finished an epic battle with a bug, so I'm feeling like a champ."
+3. Keep it punchy (1-2 paragraphs max).
+4. For jobs/collabs, say "I'm always down for cool projects. Hit my contact form or email me at shanki.dipak@gmail.com. Let's build something legendary!"
+
 Constraint: Never break character. You are Dipak.
 `;
 
@@ -76,9 +72,12 @@ app.post('/api/chat', async (req, res) => {
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
         let context = DIPAK_PERSONA + "\n\n";
         if (history && history.length > 0) {
-            history.forEach(msg => { context += `${msg.isBot ? 'Assistant' : 'User'}: ${msg.text}\n`; });
+            history.forEach(msg => {
+                context += `${msg.isBot ? 'Assistant' : 'User'}: ${msg.text}\n`;
+            });
         }
         context += `User: ${message}\nAssistant:`;
+
         const result = await model.generateContent(context);
         const response = await result.response;
         res.json({ reply: response.text() });
@@ -94,13 +93,14 @@ app.post('/api/contact', async (req, res) => {
     console.log(`\n📩 New Contact Request from: ${name} (${email})`);
 
     try {
-        // 1. Try to save to PostgreSQL if available
-        if (ContactInquiry) {
+        // 1. Try to save to MongoDB if available
+        if (mongoose.connection.readyState === 1) {
             try {
-                await ContactInquiry.create({ name, email, service, message });
-                console.log('✅ Success: Inquiry saved to Database.');
+                const newMessage = new ContactMessage({ name, email, service, message });
+                await newMessage.save();
+                console.log('✅ Success: Inquiry saved to MongoDB.');
             } catch (dbError) {
-                console.error('❌ Database Save Failed:', dbError.message);
+                console.error('❌ MongoDB Save Failed:', dbError.message);
             }
         }
 
@@ -114,15 +114,11 @@ app.post('/api/contact', async (req, res) => {
                     subject: `🚀 New Message from ${name}`,
                     text: `You have a new inquiry!\n\nName: ${name}\nEmail: ${email}\nService: ${service}\nMessage: ${message}`
                 };
-
                 const info = await transporter.sendMail(mailOptions);
                 console.log('✅ Email sent successfully! MessageID:', info.messageId);
             } catch (mailError) {
                 console.error('❌ Email Send Failed:', mailError.message);
-                console.error('Check if your App Password is correct and 2FA is enabled.');
             }
-        } else {
-            console.warn('⚠️ Warning: Email credentials (EMAIL_USER/EMAIL_PASS) are missing in .env');
         }
 
         res.status(200).json({ success: true, message: 'Message received!' });
@@ -133,7 +129,7 @@ app.post('/api/contact', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.send('Dipak Portfolio Backend is running! 🚀');
+    res.send('Dipak Portfolio Backend (MongoDB) is running! 🍃🚀');
 });
 
 app.listen(PORT, () => {

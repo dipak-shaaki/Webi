@@ -23,7 +23,7 @@ const Hero = ({ onWorkClick, onAboutClick }) => {
                     hi, I'm Dipak
                 </h1>
                 <h2 className="font-grand text-[1.5rem] md:text-[1.5rem] lg:text-[1.5rem] text-gray-700 dark:text-gray-300 leading-tight font-normal">
-                    A Developer.
+                    A Developer
                 </h2>
             </div>
 

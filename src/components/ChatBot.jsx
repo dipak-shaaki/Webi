@@ -34,9 +34,12 @@ const ChatBot = ({ isOpen, onToggle }) => {
         setIsTyping(true)
 
         try {
-            // 2. Try to get AI response from Backend
-            // Note: Change this URL once you deploy your backend (e.g. to Render)
-            const response = await fetch('http://localhost:5000/api/chat', {
+            // Use the production URL when live, otherwise use localhost
+            const API_BASE = window.location.hostname === 'localhost'
+                ? 'http://localhost:5000'
+                : 'https://dipak-portfolio-backend.onrender.com'; // Replace this with your actual Render URL later
+
+            const response = await fetch(`${API_BASE}/api/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

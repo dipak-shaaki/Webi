@@ -22,8 +22,12 @@ const Contact = () => {
         setStatus('submitting')
 
         try {
-            // Priority 1: Our own PostgreSQL Backend
-            const response = await fetch('http://localhost:5000/api/contact', {
+            // Use the production URL when live, otherwise use localhost
+            const API_BASE = window.location.hostname === 'localhost'
+                ? 'http://localhost:5000'
+                : 'https://dipak-portfolio-backend.onrender.com'; // Replace this with your actual Render URL later
+
+            const response = await fetch(`${API_BASE}/api/contact`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
