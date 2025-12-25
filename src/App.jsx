@@ -23,7 +23,7 @@ const LoadingScreen = () => (
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="text-5xl md:text-7xl font-grand font-normal italic text-gray-900 dark:text-white"
             >
-                Materializing...
+                Loading...
             </motion.h1>
         </div>
     </motion.div>
@@ -65,9 +65,9 @@ function App() {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm cursor-pointer hover:scale-110 transition-transform duration-300"
-                            onClick={() => navigate('about')}
+                            onClick={() => navigate('home')}
                         >
-                            <img src={`${import.meta.env.BASE_URL}image.jpg`} alt="Dipak" className="w-full h-full object-cover" />
+                            <img src={`${import.meta.env.BASE_URL}hunxa.jpg`} alt="Dipak" className="w-full h-full object-cover" />
                         </motion.div>
                     </div>
 

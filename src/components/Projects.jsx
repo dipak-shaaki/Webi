@@ -56,7 +56,7 @@ const Projects = () => {
     }
 
     return (
-        <div className="w-full h-full flex flex-col md:flex-row gap-8 md:gap-20 px-6 md:px-16 py-8 max-w-[1700px] mx-auto overflow-hidden md:scale-[0.8] origin-center">
+        <div className="w-full h-full flex flex-col md:flex-row items-center gap-8 md:gap-20 px-6 md:px-16 pt-20 md:pt-0 pb-16 max-w-[1700px] mx-auto overflow-hidden md:scale-[0.8] origin-center">
 
             {/* LEFT SIDE: Static Content */}
             <div className="w-full md:w-1/3 flex flex-col justify-center space-y-6 md:space-y-12 shrink-0 pt-12 md:pt-0">
@@ -77,7 +77,7 @@ const Projects = () => {
             </div>
 
             {/* RIGHT SIDE: List - Vertical Scroll on Desktop, Stacked on Mobile */}
-            <div className="flex-1 w-full h-full md:overflow-y-auto no-scrollbar mask-gradient pb-20 md:pb-0">
+            <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar mask-gradient pb-20 md:pb-0">
                 <div className="space-y-8 md:space-y-16 pt-8 md:pt-24 pl-0 md:pl-12">
                     {projects.map((project, index) => (
                         <motion.div

@@ -50,10 +50,10 @@ const Contact = () => {
     }
 
     return (
-        <div className="w-full h-full flex items-center justify-center overflow-auto md:overflow-hidden relative bg-cream dark:bg-dark-bg transition-colors duration-500">
+        <div className="w-full h-full flex items-center justify-center relative bg-cream dark:bg-dark-bg transition-colors duration-500">
 
             {/* Main Container */}
-            <div className="w-full h-full max-w-[1700px] flex flex-col md:flex-row px-4 md:px-12 pt-32 md:pt-40 pb-20 relative md:scale-[0.8] origin-center">
+            <div className="w-full h-full max-w-[1700px] flex flex-col md:flex-row px-4 md:px-12 pt-16 md:pt-20 pb-16 relative md:scale-[0.8] origin-center">
 
                 {/* LEFT SIDE: The Form */}
                 <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-4 md:px-12 order-2 md:order-1 pt-6 md:pt-0">
@@ -63,7 +63,7 @@ const Contact = () => {
                         transition={{ duration: 0.8 }}
                         className="w-full max-w-lg"
                     >
-                        <h2 className="text-4xl md:text-6xl font-grand font-normal text-gray-900 dark:text-white leading-tight mb-8">
+                        <h2 className="text-3xl md:text-6xl font-grand font-normal text-gray-900 dark:text-white leading-tight mb-8">
                             Have a project <br /> in mind?
                         </h2>
 
@@ -91,7 +91,6 @@ const Contact = () => {
                                         <input
                                             type={field.type}
                                             id={field.id}
-                                            value={formData[formData[field.id]]} // FIXED TYPO: should be formData[field.id]
                                             value={formData[field.id]}
                                             onChange={handleChange}
                                             placeholder={field.placeholder}
@@ -150,7 +149,7 @@ const Contact = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, delay: 0.2 }}
                     >
-                        <h1 className="text-[5rem] md:text-[7rem] lg:text-[9rem] font-grand font-normal text-gray-900 dark:text-[#ECE7C1] leading-[0.8] mb-8">
+                        <h1 className="text-[4rem] md:text-[7rem] lg:text-[9rem] font-grand font-normal text-gray-900 dark:text-[#ECE7C1] leading-[0.8] mb-8">
                             Hello.
                         </h1>
 
