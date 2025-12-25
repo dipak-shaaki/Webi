@@ -155,7 +155,7 @@ const Contact = () => {
 
                         <div className="space-y-6 font-montserrat font-light text-gray-800 dark:text-gray-300 text-base md:text-lg max-w-md leading-relaxed">
                             <p>
-                                Need a beautiful, well-structured website that you can own and maintain yourself? Get in touch.
+                                Looking to turn your idea into a powerful web experience? Get in touch.
                             </p>
 
                             <div className="space-y-1 pt-4">
@@ -166,11 +166,12 @@ const Contact = () => {
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                {['LinkedIn', 'Dribbble', 'Github'].map(link => (
-                                    <a key={link} href="#" className="text-gray-900 dark:text-white border-b border-gray-900 dark:border-white pb-0.5 hover:opacity-70 transition-opacity font-montserrat text-sm">
-                                        {link}
-                                    </a>
-                                ))}
+                                <a href="https://www.linkedin.com/in/dipak-shanki/" target="_blank" rel="noopener noreferrer" className="text-gray-900 dark:text-white border-b border-gray-900 dark:border-white pb-0.5 hover:opacity-70 transition-opacity font-montserrat text-sm">
+                                    LinkedIn
+                                </a>
+                                <a href="https://github.com/dipak-shaaki" target="_blank" rel="noopener noreferrer" className="text-gray-900 dark:text-white border-b border-gray-900 dark:border-white pb-0.5 hover:opacity-70 transition-opacity font-montserrat text-sm">
+                                    Github
+                                </a>
                             </div>
                         </div>
                     </motion.div>
