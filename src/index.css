@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply font-sans antialiased bg-cream dark:bg-dark-bg text-gray-900 dark:text-dark-text overflow-hidden;
+    }
+}
+
+/* Force GrandSlang */
+.font-grand {
+    font-family: 'GrandSlang-Roman', 'Times New Roman', serif !important;
+}
+
+/* Force Montserrat */
+.font-montserrat {
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+@layer base {
+
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    textarea:-webkit-autofill,
+    textarea:-webkit-autofill:hover,
+    textarea:-webkit-autofill:focus {
+        -webkit-text-fill-color: inherit !important;
+        -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+        transition: background-color 5000s ease-in-out 0s !important;
+    }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
