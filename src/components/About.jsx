@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 
 const About = () => {
     // Use BASE_URL to correctly load assets from public folder when base path is set (e.g., /Portfolio/)
-    const imagePath = `${import.meta.env.BASE_URL}image.jpg`;
+    const imagePath = `${import.meta.env.BASE_URL}imagee.jpg`;
 
     return (
         <div className="w-full min-h-full md:h-full flex items-start md:items-center justify-center relative transition-colors duration-500 bg-cream dark:bg-dark-bg overflow-y-auto md:overflow-hidden custom-scrollbar">
@@ -79,7 +79,7 @@ const About = () => {
                                 console.error("Failed to load image from:", imagePath);
                                 e.target.onerror = null;
                                 // External fallback
-                                e.target.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop";
+                                e.target.src = "";
                             }}
                         />
                     </div>
