@@ -23,9 +23,8 @@ const Contact = () => {
 
         try {
             // Use the production URL when live, otherwise use localhost
-            const API_BASE = window.location.hostname === 'localhost'
-                ? 'http://localhost:5000'
-                : 'https://dipak-portfolio-backend.onrender.com'; // Replace this with your actual Render URL later
+            // Use environment variable from Vercel/Vite, fallback to localhost
+            const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
             const response = await fetch(`${API_BASE}/api/contact`, {
                 method: 'POST',

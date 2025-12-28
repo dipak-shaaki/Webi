@@ -39,9 +39,7 @@ const AIPage = ({ onBack }) => {
         setIsTyping(true)
 
         try {
-            const API_BASE = window.location.hostname === 'localhost'
-                ? 'http://localhost:5000'
-                : 'https://dipak-portfolio-backend.onrender.com';
+            const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
             const response = await fetch(`${API_BASE}/api/chat`, {
                 method: 'POST',
@@ -149,8 +147,8 @@ const AIPage = ({ onBack }) => {
                                                 key={opt.id}
                                                 onClick={() => setRelationship(opt.id)}
                                                 className={`px-4 py-2 rounded-xl border transition-all flex items-center gap-2 ${relationship === opt.id
-                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg scale-105'
-                                                        : 'bg-white/40 dark:bg-gray-800/40 border-gray-100 dark:border-gray-700 text-gray-500 hover:bg-white dark:hover:bg-gray-800'
+                                                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg scale-105'
+                                                    : 'bg-white/40 dark:bg-gray-800/40 border-gray-100 dark:border-gray-700 text-gray-500 hover:bg-white dark:hover:bg-gray-800'
                                                     }`}
                                             >
                                                 <span className="text-[10px] font-bold uppercase tracking-tight">{opt.label}</span>
