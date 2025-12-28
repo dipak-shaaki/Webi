@@ -1,6 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiGithub, FiLinkedin, FiInstagram, FiArrowLeft } from 'react-icons/fi'
-import ThemeToggle from './ThemeToggle'
 
 const Sidebar = ({ currentView, onNavigate }) => {
     const socialLinks = [
@@ -16,24 +15,11 @@ const Sidebar = ({ currentView, onNavigate }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
         >
-            {/* Left: Copyright */}
-            <div className="pointer-events-auto">
-                <AnimatePresence>
-                    {currentView === 'home' && (
-                        <motion.span
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 0.6 }}
-                            exit={{ opacity: 0 }}
-                            className="text-[10px] font-montserrat tracking-[0.3em] text-gray-400 uppercase whitespace-nowrap"
-                        >
-                            © 2025 DIPAK
-                        </motion.span>
-                    )}
-                </AnimatePresence>
-            </div>
+            {/* Left side spacer - to keep socials centered */}
+            <div className="flex-1 hidden md:block" />
 
             {/* Center: Socials or Back to Home */}
-            <div className="pointer-events-auto absolute left-1/2 -translate-x-1/2 hidden md:block">
+            <div className="pointer-events-auto flex items-center justify-center flex-1">
                 <AnimatePresence mode="wait">
                     {currentView === 'home' ? (
                         <motion.div
@@ -41,7 +27,7 @@ const Sidebar = ({ currentView, onNavigate }) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
-                            className="flex items-center gap-8"
+                            className="flex items-center gap-6 md:gap-8"
                         >
                             {socialLinks.map((link, index) => (
                                 <motion.a
@@ -56,7 +42,7 @@ const Sidebar = ({ currentView, onNavigate }) => {
                                 </motion.a>
                             ))}
                         </motion.div>
-                    ) : (
+                    ) : currentView !== 'chat' ? (
                         <motion.button
                             key="back-home"
                             onClick={() => onNavigate('home')}
@@ -70,24 +56,12 @@ const Sidebar = ({ currentView, onNavigate }) => {
                                 Back to Home
                             </span>
                         </motion.button>
-                    )}
+                    ) : null}
                 </AnimatePresence>
             </div>
 
-            {/* Right: Theme Toggle & Socials (Mobile) */}
-            <div className="pointer-events-auto flex items-center gap-6">
-                {/* On mobile, show socials here instead of center */}
-                <div className="flex md:hidden items-center gap-4">
-                    {currentView === 'home' && socialLinks.map((link, index) => (
-                        <a key={index} href={link.href} target="_blank" rel="noopener noreferrer" className="text-gray-400">
-                            <link.icon size={14} />
-                        </a>
-                    ))}
-                </div>
-
-                <ThemeToggle className="!w-6 !h-6 !bg-transparent !shadow-none hover:!bg-gray-100 dark:hover:!bg-gray-800" />
-            </div>
-
+            {/* Right side spacer */}
+            <div className="flex-1 hidden md:block" />
         </motion.footer>
     )
 }

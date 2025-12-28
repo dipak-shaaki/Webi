@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 
-const Hero = ({ onWorkClick, onAboutClick }) => {
+const Hero = ({ onWorkClick, onAboutClick, onChatClick }) => {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
     const handleMouseMove = (e) => {
@@ -22,9 +22,14 @@ const Hero = ({ onWorkClick, onAboutClick }) => {
                 <h1 className="font-grand text-[3.5rem] md:text-[6rem] lg:text-[6rem] text-gray-900 dark:text-[#ECE7C1] leading-[1.0] tracking-normal font-normal">
                     hi, I'm Dipak
                 </h1>
-                <h2 className="font-grand text-[1.5rem] md:text-[1.5rem] lg:text-[1.5rem] text-gray-700 dark:text-gray-300 leading-tight font-normal">
-                    A Developer
-                </h2>
+                <motion.h2
+                    onClick={onChatClick}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="font-grand text-[1.2rem] md:text-[1.5rem] lg:text-[1.5rem] text-gray-700 dark:text-gray-300 leading-tight font-normal cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-block"
+                >
+                    Lets Chat!
+                </motion.h2>
             </div>
 
 

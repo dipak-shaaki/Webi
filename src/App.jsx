@@ -6,6 +6,8 @@ import Hero from './components/Hero'
 import Projects from './components/Projects'
 import About from './components/About'
 import Contact from './components/Contact'
+import AIPage from './components/AIPage'
+import ThemeToggle from './components/ThemeToggle'
 import { FiX } from 'react-icons/fi'
 
 // Loading Component
@@ -71,14 +73,19 @@ function App() {
                         </motion.div>
                     </div>
 
-                    {/* Top Right: Hamburger Menu */}
-                    <div className="fixed top-6 right-6 md:top-8 md:right-8 z-[100]">
+                    {/* Top Right: Actions (Menu + Theme) */}
+                    <div className="fixed top-6 right-6 md:top-8 md:right-8 z-[100] flex items-center gap-4">
+                        {/* Theme Toggle in a glass pill */}
+                        <div className="bg-white/10 dark:bg-black/10 backdrop-blur-md rounded-full border border-white/20 dark:border-white/10 p-1 flex items-center justify-center">
+                            <ThemeToggle className="!w-8 !h-8 !bg-transparent !shadow-none hover:bg-white/10" />
+                        </div>
+
                         <motion.button
                             key="menu-btn"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             onClick={toggleMenu}
-                            className="w-10 h-10 flex items-center justify-center group relative"
+                            className="w-10 h-10 flex items-center justify-center group relative bg-white/10 dark:bg-black/10 backdrop-blur-md rounded-full border border-white/20 dark:border-white/10"
                             aria-label="Menu"
                         >
                             <div className="flex flex-col gap-[5px] items-end">
@@ -123,6 +130,7 @@ function App() {
                                         <Hero
                                             onWorkClick={() => navigate('work')}
                                             onAboutClick={() => navigate('about')}
+                                            onChatClick={() => navigate('chat')}
                                         />
                                     </motion.div>
                                 )}
@@ -163,6 +171,19 @@ function App() {
                                         transition={{ duration: 0.5 }}
                                     >
                                         <Contact />
+                                    </motion.div>
+                                )}
+
+                                {currentView === 'chat' && (
+                                    <motion.div
+                                        key="chat"
+                                        className="w-full h-full flex flex-col items-center justify-center overflow-hidden"
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 1.05 }}
+                                        transition={{ duration: 0.5 }}
+                                    >
+                                        <AIPage onBack={() => navigate('home')} />
                                     </motion.div>
                                 )}
                             </AnimatePresence>

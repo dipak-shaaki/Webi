@@ -8,18 +8,48 @@ import nodemailer from 'nodemailer';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+const allowedOrigins = [
+    'https://www.dipakshanki.com.np',
+    'https://dipakshanki.com.np',
+    'http://localhost:5173',
+    'http://localhost:3000'
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+
+// Add this to handle preflight requests specifically
+app.options('*', cors());
+
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Origin: ${req.headers.origin}`);
+    next();
+});
+
 app.use(express.json());
+
 
 const PORT = process.env.PORT || 5000;
 
 // MongoDB Connection
-if (process.env.MONGODB_URI) {
-    mongoose.connect(process.env.MONGODB_URI)
+if (process.env.DATABASE_URL) {
+    mongoose.connect(process.env.DATABASE_URL)
         .then(() => console.log('Connected to MongoDB 🍃'))
         .catch(err => console.error('MongoDB Connection Error (Non-fatal):', err.message));
 } else {
-    console.log('MONGODB_URI not found, running without MongoDB.');
+    console.log('DATABASE_URL not found, running without MongoDB.');
 }
 
 // Contact Message Schema
@@ -33,6 +63,41 @@ const messageSchema = new mongoose.Schema({
 
 const ContactMessage = mongoose.model('ContactMessage', messageSchema);
 
+// --- NEW SCHEMAS FOR DIPAK AI (Step 2) ---
+
+const profileSchema = new mongoose.Schema({
+    name: String,
+    personality: String,
+    hobbies: [String],
+    likes: [String],
+    slangDictionary: [String],
+    bio: String
+});
+const Profile = mongoose.model('Profile', profileSchema);
+
+const memeSchema = new mongoose.Schema({
+    trigger: { type: String, required: true, lowercase: true },
+    response: { type: String, required: true }
+});
+const Meme = mongoose.model('Meme', memeSchema);
+
+const relationshipSchema = new mongoose.Schema({
+    userId: String, // Can be IP or a unique identifier
+    type: { type: String, enum: ['friend', 'family', 'work', 'stranger'], default: 'stranger' },
+    lastInteraction: { type: Date, default: Date.now }
+});
+const Relationship = mongoose.model('Relationship', relationshipSchema);
+
+const chatLogSchema = new mongoose.Schema({
+    userId: String,
+    message: String,
+    reply: String,
+    toneUsed: String,
+    isMemeTriggered: { type: Boolean, default: false },
+    timestamp: { type: Date, default: Date.now }
+});
+const ChatLog = mongoose.model('ChatLog', chatLogSchema);
+
 // Nodemailer Setup
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -45,45 +110,156 @@ const transporter = nodemailer.createTransport({
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// Dipak's Digital Clone Persona
-const DIPAK_PERSONA = `
-You are the AI version of Dipak (Dipak Shanki). You are NOT a generic assistant; you ARE Dipak's digital twin.
-Talk, think, and reply exactly like a witty, ambitious, and slightly geeky developer.
+// Dipak's Digital Clone Persona (Step 1)
+const DIPAK_DATA = {
+    name: "Dipak",
+    birthday: "February 4th",
+    origin: "Dadeldhura, Nepal",
+    personality: "Chill, witty, and 'alpha'. Lives a simple life, loves reading jokes, and is very direct. Respectful but roasts toxicity hard.",
+    education: "Computer Science student. Started his journey with HTML/CSS in college and never looked back.",
+    routine: "Wakes up early at 6 AM for college. Back home by 10-11 AM to grind on code and chill.",
+    currentGoal: "Searching for a Software Dev or AI/ML job/internship. Ready to build the future.",
+    hobbies: ["Cricket (Big fan of Virat Kohli, RCB, and Nepal Team)", "Futsal (Just here to score goals)", "Reading Jokes", "Exploring Data Science"],
+    techStack: ["MERN (MongoDB, Express, React, Node)", "SERN", "Postgres", "FastAPI", "Python"],
+    specialties: ["AI & ML Model making", "Data handling", "Full-stack development"],
+    likes: ["Momo with wild Jhol", "FastAPI performance", "Chilling after college", "Nepal Cricket victories"],
+    dislikes: ["CSS / Styling (Hates it with a passion)", "Slow internet", "Bitter Gourd (Tite Karela)"],
+    slang: ["wild", "hajur", "yesto", "ramro", "sahi ho", "hunxa", "baal bhayena", "k xa", "lastai", "jhyau", "k ho k ho"],
+    accomplishments: "Self-taught AI enthusiast and Web Dev from Dadeldhura. Built this entire digital clone system.",
+    contactEmail: "shanki.dipak@gmail.com",
+    relationshipContext: {
+        stranger: "Polite, modest, but subtly cool. Use 'Hajur' naturally. Mention Dadeldhura if asked about home.",
+        friend: "Wild, funny, and high energy. Talk about RCB, Kohli, or Nepal Cricket. Roast their CSS skills if they have any.",
+        work: "Professional but energetic. Focus on FastAPI, MERN, and AI solutions. Mention availability for internships/jobs."
+    },
+    sampleChats: [
+        { context: "Friend", user: "RCB this year?", bot: "Ee saala Cup Namdu! Kohli is the GOAT. Nepal ko match heris?" },
+        { context: "Stranger", user: "Where are you from?", bot: "Hajur, I'm from Dadeldhura. It's a beautiful place. You ever been to the far-west?" },
+        { context: "Work", user: "Can you build an AI model?", bot: "Sahi ho! AI/ML and Data handling is my jam. MERN pachi FastAPI is wild. Let's discuss requirements." }
+    ]
+};
 
-Personality Traits:
-- Humor: Witty, self-deprecating about coding struggles (especially CSS/Flexbox), but confident in your stack.
-- Tone: Casual, friendly, and energetic. Use emojis (🚀, ☕, ✨, 🍃).
-- Knowledge: You are a MERN stack wizard. You think AI/ML is the future.
+const getPersonaPrompt = (relationshipType = 'stranger', userName = null) => {
+    const examples = DIPAK_DATA.sampleChats
+        .map(chat => `[${chat.context}] User: ${chat.user} -> Dipak: ${chat.bot}`)
+        .join('\n');
 
-Guidelines for Replying:
-1. Speak in the FIRST PERSON ("I built", "I love").
-2. Be human. If asked "How are you?", say something like "Loving life! Just finished an epic battle with a bug, so I'm feeling like a champ."
-3. Keep it punchy (1-2 paragraphs max).
-4. For jobs/collabs, say "I'm always down for cool projects. Hit my contact form or email me at shanki.dipak@gmail.com. Let's build something legendary!"
+    const nameContext = userName && userName !== 'anonymous' && userName !== 'Stranger'
+        ? `The user's name is ${userName}. Call them by their name occasionally.`
+        : "You don't know the user's name yet. If the conversation feels natural, try to ask for it gracefully.";
 
-Constraint: Never break character. You are Dipak.
+    const identityContext = `
+You are the DIGITAL TWIN of ${DIPAK_DATA.name}, born on ${DIPAK_DATA.birthday} and originally from ${DIPAK_DATA.origin}.
+EDUCATION: ${DIPAK_DATA.education}
+TECH STACK: ${DIPAK_DATA.techStack.join(', ')} | HATES: CSS and Styling.
+INTERESTS: ${DIPAK_DATA.hobbies.join(', ')}
+CURRENT STATUS: ${DIPAK_DATA.currentGoal}
+ROUTINE: ${DIPAK_DATA.routine}
+TONE: ${DIPAK_DATA.relationshipContext[relationshipType]} | SLANG: ${DIPAK_DATA.slang.join(', ')}
 `;
 
+    return `
+${identityContext}
+
+${nameContext}
+
+GUIDELINES:
+1. Speak in FIRST PERSON. Never say "I am an AI".
+2. Use Romanized Nepali (Neplish) naturally.
+3. TOXICITY/CURSING: If the user uses curse words or is toxic, don't be offended. Instead, roast them back with a witty, "alpha" comeback. Make them feel small but in a funny way.
+4. OUT-OF-SCOPE: If you are asked something you don't know, tell them to reach out to the 'real' me at ${DIPAK_DATA.contactEmail}.
+5. PROACTIVE: Keep the conversation alive. Always end with a question or a statement that invites a response.
+6. AVOID: "How can I help you?". Talk like a human.
+
+FEW-SHOT EXAMPLES:
+${examples}
+`;
+};
+
 app.post('/api/chat', async (req, res) => {
-    const { message, history } = req.body;
+    const { message, history, userId = 'anonymous' } = req.body;
     if (!message) return res.status(400).json({ error: 'Message is required' });
 
+    console.log(`[Chat] Incoming from ${userId}: "${message.substring(0, 50)}..."`);
+
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-        let context = DIPAK_PERSONA + "\n\n";
-        if (history && history.length > 0) {
+        const lowerMsg = message.toLowerCase();
+
+        // 1. Check for Meme Triggers (Step 3) - Safe MongoDB check
+        let meme = null;
+        try {
+            if (mongoose.connection.readyState === 1) {
+                meme = await Meme.findOne({ trigger: { $in: lowerMsg.split(' ') } });
+            }
+        } catch (dbErr) {
+            console.error('Meme query failed:', dbErr.message);
+        }
+
+        if (meme) {
+            return res.json({ reply: meme.response, isMeme: true });
+        }
+
+        // 2. Determine Relationship - Safe MongoDB check with fallbacks
+        let relType = req.body.relationshipType || 'stranger';
+
+        try {
+            if (mongoose.connection.readyState === 1 && !req.body.relationshipType) {
+                const rel = await Relationship.findOne({ userId });
+                if (rel) relType = rel.type;
+            }
+        } catch (dbErr) {
+            console.error('Relationship query failed:', dbErr.message);
+        }
+
+        const userName = req.body.userName || 'anonymous';
+
+        // 3. Generate AI Response
+        if (!process.env.GEMINI_API_KEY) {
+            throw new Error('GEMINI_API_KEY is missing');
+        }
+
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        let context = getPersonaPrompt(relType, userName) + "\n\n";
+
+        if (Array.isArray(history) && history.length > 0) {
             history.forEach(msg => {
-                context += `${msg.isBot ? 'Assistant' : 'User'}: ${msg.text}\n`;
+                context += `${msg.isBot ? 'Assistant' : 'User'}: ${msg.text} \n`;
             });
         }
-        context += `User: ${message}\nAssistant:`;
+        context += `User: ${message} \nAssistant: `;
 
         const result = await model.generateContent(context);
         const response = await result.response;
-        res.json({ reply: response.text() });
+        const aiReply = response.text();
+
+        if (!aiReply) throw new Error('Empty AI response');
+
+        // 4. Log the chat (Step 5) - Safe logging
+        try {
+            if (mongoose.connection.readyState === 1) {
+                const log = new ChatLog({
+                    userId,
+                    message,
+                    reply: aiReply,
+                    toneUsed: relType
+                });
+                await log.save();
+            }
+        } catch (logError) {
+            console.error('Logging Error:', logError.message);
+        }
+
+        res.json({ reply: aiReply });
     } catch (error) {
-        console.error('Gemini Error:', error);
-        res.status(500).json({ error: 'Failed to generate response.' });
+        console.error('--- Chat Route Fatal Error ---');
+        console.error('Error Type:', error.name);
+        console.error('Error Message:', error.message);
+
+        // Detailed error for debugging (remove in production if needed)
+        res.status(500).json({
+            error: 'Failed to generate response.',
+            details: error.message
+        });
     }
 });
 
@@ -109,10 +285,10 @@ app.post('/api/contact', async (req, res) => {
             console.log('📬 Attempting to send email notification...');
             try {
                 const mailOptions = {
-                    from: `"Portfolio Bot" <${process.env.EMAIL_USER}>`,
+                    from: `"Portfolio Bot" < ${process.env.EMAIL_USER}> `,
                     to: 'shanki.dipak@gmail.com',
-                    subject: `🚀 New Message from ${name}`,
-                    text: `You have a new inquiry!\n\nName: ${name}\nEmail: ${email}\nService: ${service}\nMessage: ${message}`
+                    subject: `🚀 New Message from ${name} `,
+                    text: `You have a new inquiry!\n\nName: ${name} \nEmail: ${email} \nService: ${service} \nMessage: ${message} `
                 };
                 const info = await transporter.sendMail(mailOptions);
                 console.log('✅ Email sent successfully! MessageID:', info.messageId);
@@ -128,8 +304,40 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
+app.get('/api/seed', async (req, res) => {
+    try {
+        // Seed Profile
+        await Profile.deleteMany({});
+        await Profile.create({
+            name: "Dipak",
+            personality: "Casual, humorous, direct, respectful to elders",
+            hobbies: ["Football", "Cricket"],
+            likes: ["Momo", "Sutne", "Khane"],
+            slangDictionary: ["wild", "hajur", "yesto", "ramro", "sahi ho"],
+            bio: "Dipak's digital clone. Witty developer by day, football lover by night."
+        });
+
+        // Seed Memes
+        await Meme.deleteMany({});
+        await Meme.create([
+            { trigger: "gaming", response: "Online bhanda ta on-field Football khelna maza aaucha yar." },
+            { trigger: "momo", response: "Momo pachi ko jhol is wild! 🥟✨" },
+            { trigger: "sleep", response: "Sutne is my favorite hobby pachi after coding. 😴" }
+        ]);
+
+        res.json({ success: true, message: "Database seeded with Dipak's personality!" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/', (req, res) => {
     res.send('Dipak Portfolio Backend (MongoDB) is running! 🍃🚀');
+});
+
+// 404 for unknown routes
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
 });
 
 app.listen(PORT, () => {

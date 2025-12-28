@@ -3,9 +3,9 @@ import ThemeToggle from './ThemeToggle'
 
 const HamburgerMenu = ({ isOpen, onClose, onNavigate, currentView }) => {
     const menuItems = [
-       // Added HOME for easy return
         { name: 'WORK', view: 'work' },
         { name: 'ABOUT', view: 'about' },
+      
     ]
 
     return (
@@ -31,8 +31,8 @@ const HamburgerMenu = ({ isOpen, onClose, onNavigate, currentView }) => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 + index * 0.1, duration: 0.5, ease: "easeOut" }}
                                 className={`pointer-events-auto text-4xl md:text-8xl font-grand font-normal hover:italic transition-all duration-300 ${currentView === item.view
-                                        ? 'text-gray-900 dark:text-white italic'
-                                        : 'text-gray-400 dark:text-gray-600 hover:text-gray-900 dark:hover:text-white'
+                                    ? 'text-gray-900 dark:text-white italic'
+                                    : 'text-gray-400 dark:text-gray-600 hover:text-gray-900 dark:hover:text-white'
                                     }`}
                             >
                                 {item.name}
