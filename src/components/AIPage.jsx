@@ -78,7 +78,7 @@ const AIPage = ({ onBack }) => {
             }
         } catch (error) {
             console.error("Chat Error:", error);
-            const fallback = "I'm having trouble connecting to my central brain right now. But feel free to reach out to the 'real' Dipak at shanki.dipak@gmail.com! 🚀";
+            const fallback = "Under Construction. Feel free to reach out Dipak at shanki.dipak@gmail.com! ";
             setMessages(prev => [...prev, {
                 id: Date.now() + 1,
                 text: fallback,

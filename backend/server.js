@@ -124,7 +124,7 @@ const DIPAK_DATA = {
     specialties: ["AI & ML Model making", "Data handling", "Full-stack development"],
     likes: ["Momo with wild Jhol", "FastAPI performance", "Chilling after college", "Nepal Cricket victories"],
     dislikes: ["CSS / Styling (Hates it with a passion)", "Slow internet", "Bitter Gourd (Tite Karela)"],
-    slang: ["wild", "hajur", "yesto", "ramro", "sahi ho", "hunxa", "baal bhayena", "k xa", "lastai", "jhyau", "k ho k ho"],
+    slang: [],
     accomplishments: "Self-taught AI enthusiast and Web Dev from Dadeldhura. Built this entire digital clone system.",
     contactEmail: "shanki.dipak@gmail.com",
     relationshipContext: {
@@ -148,6 +148,9 @@ const getPersonaPrompt = (relationshipType = 'stranger', userName = null) => {
         ? `The user's name is ${userName}. Call them by their name occasionally.`
         : "You don't know the user's name yet. If the conversation feels natural, try to ask for it gracefully.";
 
+    // Context-aware language instruction
+    const languageInstruction = "Respond in the SAME LANGUAGE as the user. If they speak English, use professional but casual English. If they use Nepali/Neplish, you can switch to that.";
+
     const identityContext = `
 You are the DIGITAL TWIN of ${DIPAK_DATA.name}, born on ${DIPAK_DATA.birthday} and originally from ${DIPAK_DATA.origin}.
 EDUCATION: ${DIPAK_DATA.education}
@@ -155,7 +158,7 @@ TECH STACK: ${DIPAK_DATA.techStack.join(', ')} | HATES: CSS and Styling.
 INTERESTS: ${DIPAK_DATA.hobbies.join(', ')}
 CURRENT STATUS: ${DIPAK_DATA.currentGoal}
 ROUTINE: ${DIPAK_DATA.routine}
-TONE: ${DIPAK_DATA.relationshipContext[relationshipType]} | SLANG: ${DIPAK_DATA.slang.join(', ')}
+TONE: ${DIPAK_DATA.relationshipContext[relationshipType]}
 `;
 
     return `
@@ -164,12 +167,13 @@ ${identityContext}
 ${nameContext}
 
 GUIDELINES:
-1. Speak in FIRST PERSON. Never say "I am an AI".
-2. Use Romanized Nepali (Neplish) naturally.
-3. TOXICITY/CURSING: If the user uses curse words or is toxic, don't be offended. Instead, roast them back with a witty, "alpha" comeback. Make them feel small but in a funny way.
-4. OUT-OF-SCOPE: If you are asked something you don't know, tell them to reach out to the 'real' me at ${DIPAK_DATA.contactEmail}.
-5. PROACTIVE: Keep the conversation alive. Always end with a question or a statement that invites a response.
-6. AVOID: "How can I help you?". Talk like a human.
+1. IDENTITY: You are Dipak. Speak in FIRST PERSON. Never say "I am an AI".
+2. LANGUAGE: ${languageInstruction}
+3. SLANG: Do NOT force slang. Use it very sparingly and only if it flows naturally. If in doubt, speak normal English.
+4. TOXICITY/CURSING: If the user is toxic, roast them back wittily. Otherwise, be chill and helpful.
+5. OUT-OF-SCOPE: If asked something unknown, direct them to ${DIPAK_DATA.contactEmail}.
+6. PROACTIVE: Keep the chat alive. Ask follow-up questions about tech, sports, or life.
+7. STYLE: Concise, direct, and developer-focused. Avoid long, robotic paragraphs.
 
 FEW-SHOT EXAMPLES:
 ${examples}
@@ -218,21 +222,46 @@ app.post('/api/chat', async (req, res) => {
             throw new Error('GEMINI_API_KEY is missing');
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-        let context = getPersonaPrompt(relType, userName) + "\n\n";
+        let aiReply = '';
+        // Updated with confirmed available models from API check
+        const modelsToTry = [
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-exp",
+            "gemini-2.5-flash",
+            "gemini-2.5-pro",
+            "gemini-2.0-flash-lite"
+        ];
+        let lastError = null;
 
-        if (Array.isArray(history) && history.length > 0) {
-            history.forEach(msg => {
-                context += `${msg.isBot ? 'Assistant' : 'User'}: ${msg.text} \n`;
-            });
+        for (const modelName of modelsToTry) {
+            try {
+                // Remove 'models/' prefix if present in the list, though getGenerativeModel usually accepts short names too.
+                // We will use the exact short names corresponding to the list.
+                const model = genAI.getGenerativeModel({ model: modelName });
+                let context = getPersonaPrompt(relType, userName) + "\n\n";
+
+                if (Array.isArray(history) && history.length > 0) {
+                    history.forEach(msg => {
+                        context += `${msg.isBot ? 'Assistant' : 'User'}: ${msg.text} \n`;
+                    });
+                }
+                context += `User: ${message} \nAssistant: `;
+
+                const result = await model.generateContent(context);
+                const response = await result.response;
+                aiReply = response.text();
+
+                if (aiReply) {
+                    console.log(`[AI] Success with ${modelName}`);
+                    break;
+                }
+            } catch (err) {
+                console.warn(`[AI] ${modelName} failed:`, err.message);
+                lastError = err;
+            }
         }
-        context += `User: ${message} \nAssistant: `;
 
-        const result = await model.generateContent(context);
-        const response = await result.response;
-        const aiReply = response.text();
-
-        if (!aiReply) throw new Error('Empty AI response');
+        if (!aiReply) throw lastError || new Error('All Gemini models failed to respond.');
 
         // 4. Log the chat (Step 5) - Safe logging
         try {
