@@ -26,26 +26,33 @@ const Contact = () => {
             // Use environment variable from Vercel/Vite, fallback to localhost
             const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-            const response = await fetch(`${API_BASE}/api/contact`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
+            // Create a timeout promise (15 seconds)
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Request timed out')), 15000)
+            );
+
+            // Race the fetch against the timeout
+            const response = await Promise.race([
+                fetch(`${API_BASE}/api/contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                }),
+                timeoutPromise
+            ]);
 
             if (response.ok) {
                 setStatus('success')
                 setFormData({ name: '', email: '', service: '', message: '' })
                 setTimeout(() => setStatus('idle'), 5000)
             } else {
-                // If backend fails, we could fallback or show error
                 throw new Error('Backend failed');
             }
         } catch (error) {
             console.error('Submission error:', error)
             setStatus('error')
-            setTimeout(() => setStatus('idle'), 4000)
+            // Show error for longer if it's a timeout
+            setTimeout(() => setStatus('idle'), 5000)
         }
     }
 

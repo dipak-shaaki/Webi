@@ -289,18 +289,26 @@ app.post('/api/contact', async (req, res) => {
             }
         }
 
-        // 2. Send Email Notification
+        // 2. Send Email Notification (with 5s timeout to prevent hanging)
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             console.log('📬 Attempting to send email notification...');
+            const emailPromise = transporter.sendMail({
+                from: `"Portfolio Bot" <${process.env.EMAIL_USER}>`,
+                to: 'shanki.dipak@gmail.com',
+                subject: `🚀 New Message from ${name}`,
+                text: `You have a new inquiry!\n\nName: ${name}\nEmail: ${email}\nService: ${service}\nMessage: ${message}`
+            });
+
+            // wait for max 5 seconds, otherwise proceed
+            const emailTimeout = new Promise((resolve) => setTimeout(() => resolve('timeout'), 5000));
+
             try {
-                const mailOptions = {
-                    from: `"Portfolio Bot" < ${process.env.EMAIL_USER}> `,
-                    to: 'shanki.dipak@gmail.com',
-                    subject: `🚀 New Message from ${name} `,
-                    text: `You have a new inquiry!\n\nName: ${name} \nEmail: ${email} \nService: ${service} \nMessage: ${message} `
-                };
-                const info = await transporter.sendMail(mailOptions);
-                console.log('✅ Email sent successfully! MessageID:', info.messageId);
+                const result = await Promise.race([emailPromise, emailTimeout]);
+                if (result === 'timeout') {
+                    console.warn('⚠️ Email sending timed out (proceeding anyway).');
+                } else {
+                    console.log('✅ Email sent successfully! MessageID:', result.messageId);
+                }
             } catch (mailError) {
                 console.error('❌ Email Send Failed:', mailError.message);
             }
