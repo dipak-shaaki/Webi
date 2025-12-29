@@ -6,7 +6,7 @@ const ChatBot = ({ isOpen, onToggle }) => {
     const [messages, setMessages] = useState([
         {
             id: 1,
-            text: "Hi! I'm Dipak's virtual assistant. Ask me anything! 👋",
+            text: "Hi! I'm Dipak's virtual assistant. Ask me anything!",
             isBot: true
         }
     ])
@@ -76,7 +76,7 @@ const ChatBot = ({ isOpen, onToggle }) => {
             setTimeout(() => {
                 setMessages(prev => [...prev, {
                     id: Date.now() + 2,
-                    text: "Goodbye! It was nice chatting with you. 👋",
+                    text: "Goodbye! It was nice chatting with you.",
                     isBot: true
                 }]);
                 // Optional: Close bot after a delay
@@ -90,14 +90,14 @@ const ChatBot = ({ isOpen, onToggle }) => {
     const generateFallbackResponse = (text) => {
         const lower = text.toLowerCase()
         if (lower.includes("let's do") || lower.includes("lets do") || lower.includes("hire") || lower.includes("project")) {
-            return "Sounds like a plan! 🚀 Mail me at shanki.dipak@gmail.com and let's make it happen."
+            return "Sounds like a plan!  Mail me at shanki.dipak@gmail.com and let's make it happen."
         }
         if (lower.includes("about yourself") || lower.includes("who are you")) {
             return "I'm Dipak's AI. I focus on MERN/SERN stack development and solving complex problems with code."
         }
         if (lower.includes('hello') || lower.includes('hi'))
             return "Hello there! How can I help you today?"
-        return "That's interesting! I'm currently running in 'offline mode'. Once Dipak connects my brain (Gemini API), I'll be able to answer much better!"
+        return "That's interesting! I'm currently running in 'offline mode'. Once Dipak connects my brain , I'll be able to answer much better!"
     }
 
     return (

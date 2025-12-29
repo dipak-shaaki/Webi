@@ -98,7 +98,7 @@ const AIPage = ({ onBack }) => {
     const relOptions = [
         { id: 'friend', label: 'I know Dipak' },
         { id: 'stranger', label: "I don't know Dipak" },
-        { id: 'work', label: 'Work / Colleague' },
+      
     ]
 
     return (
