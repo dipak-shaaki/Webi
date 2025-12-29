@@ -33,6 +33,12 @@ const ChatBot = ({ isOpen, onToggle }) => {
         setInputText('')
         setIsTyping(true)
 
+        // Check for bye message
+        if (handleBye(text)) {
+            setTimeout(() => setIsTyping(false), 1000)
+            return
+        }
+
         try {
             // Use the production URL when live, otherwise use localhost
             // Use environment variable from Vercel/Vite, fallback to localhost
@@ -61,6 +67,24 @@ const ChatBot = ({ isOpen, onToggle }) => {
         } finally {
             setIsTyping(false);
         }
+    }
+
+    // Intercept 'bye' to end conversation gracefully
+    const handleBye = (text) => {
+        const lower = text.toLowerCase();
+        if (lower.includes('bye') || lower.includes('goodbye') || lower.includes('cya')) {
+            setTimeout(() => {
+                setMessages(prev => [...prev, {
+                    id: Date.now() + 2,
+                    text: "Goodbye! It was nice chatting with you. 👋",
+                    isBot: true
+                }]);
+                // Optional: Close bot after a delay
+                // setTimeout(onToggle, 2000); 
+            }, 1000);
+            return true;
+        }
+        return false;
     }
 
     const generateFallbackResponse = (text) => {

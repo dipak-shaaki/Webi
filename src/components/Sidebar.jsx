@@ -49,7 +49,7 @@ const Sidebar = ({ currentView, onNavigate }) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
-                            className="flex items-center gap-2 group text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-300"
+                            className="hidden md:flex items-center gap-2 group text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-300"
                         >
                             <FiArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                             <span className="text-[11px] font-montserrat tracking-[0.2em] uppercase">
