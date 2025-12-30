@@ -21,17 +21,14 @@ const Contact = () => {
 
         setStatus('submitting')
 
-        try {
-            // Use the production URL when live, otherwise use localhost
-            // Use environment variable from Vercel/Vite, fallback to localhost
+        const submitRequest = async () => {
             const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-            // Create a timeout promise (15 seconds)
+            // 60s timeout for cold starts
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Request timed out')), 15000)
+                setTimeout(() => reject(new Error('Request timed out')), 60000)
             );
 
-            // Race the fetch against the timeout
             const response = await Promise.race([
                 fetch(`${API_BASE}/api/contact`, {
                     method: 'POST',
@@ -41,18 +38,36 @@ const Contact = () => {
                 timeoutPromise
             ]);
 
-            if (response.ok) {
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || 'Backend failed,Try again');
+            }
+            return response;
+        };
+
+        try {
+            await submitRequest();
+            // Success
+            setStatus('success')
+            setFormData({ name: '', email: '', service: '', message: '' })
+            setTimeout(() => setStatus('idle'), 5000)
+        } catch (error) {
+            console.warn('First attempt failed:', error.message);
+
+            // Retry once automatically
+            try {
+                await new Promise(r => setTimeout(r, 1000)); // Wait 1s
+                await submitRequest();
+
+                // Success on retry
                 setStatus('success')
                 setFormData({ name: '', email: '', service: '', message: '' })
                 setTimeout(() => setStatus('idle'), 5000)
-            } else {
-                throw new Error('Backend failed');
+            } catch (retryError) {
+                console.error('Final submission error:', retryError)
+                setStatus('error')
+                setTimeout(() => setStatus('idle'), 5000)
             }
-        } catch (error) {
-            console.error('Submission error:', error)
-            setStatus('error')
-            // Show error for longer if it's a timeout
-            setTimeout(() => setStatus('idle'), 5000)
         }
     }
 

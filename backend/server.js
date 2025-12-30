@@ -80,10 +80,24 @@ const ChatLog = mongoose.model('ChatLog', chatLogSchema);
 
 // Nodemailer Setup
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // true for 465, false for other ports
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false // Helps with some cloud provider network issues
+    }
+});
+
+// Validate Transporter
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('❌ Email Connection Error:', error.message);
+    } else {
+        console.log('✅ Email Service Ready (SMTP)');
     }
 });
 
@@ -285,36 +299,46 @@ app.post('/api/contact', async (req, res) => {
                 await newMessage.save();
                 console.log('✅ Success: Inquiry saved to MongoDB.');
             } catch (dbError) {
+                // Non-fatal: Log but continue to email
                 console.error('❌ MongoDB Save Failed:', dbError.message);
             }
         }
 
-        // 2. Send Email Notification (with 5s timeout to prevent hanging)
-        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            console.log('📬 Attempting to send email notification...');
-            const emailPromise = transporter.sendMail({
-                from: `"Portfolio Bot" <${process.env.EMAIL_USER}>`,
-                to: 'shanki.dipak@gmail.com',
-                subject: `🚀 New Message from ${name}`,
-                text: `You have a new inquiry!\n\nName: ${name}\nEmail: ${email}\nService: ${service}\nMessage: ${message}`
-            });
+        // 2. Send Email Notification
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            console.error('❌ Email credentials missing in environment variables.');
+            return res.status(200).json({ success: true, warning: 'Email not configured' });
+        }
 
-            // wait for max 5 seconds, otherwise proceed
-            const emailTimeout = new Promise((resolve) => setTimeout(() => resolve('timeout'), 5000));
+        console.log('📬 Attempting to send email notification...');
+        const emailPromise = transporter.sendMail({
+            from: `"Portfolio Bot" <${process.env.EMAIL_USER}>`,
+            to: 'shanki.dipak@gmail.com',
+            replyTo: email, // Allow replying directly to the user
+            subject: `🚀 New Message from ${name}`,
+            text: `You have a new inquiry!\n\nName: ${name}\nEmail: ${email}\nService: ${service}\nMessage: ${message}`
+        });
 
-            try {
-                const result = await Promise.race([emailPromise, emailTimeout]);
-                if (result === 'timeout') {
-                    console.warn('⚠️ Email sending timed out (proceeding anyway).');
-                } else {
-                    console.log('✅ Email sent successfully! MessageID:', result.messageId);
-                }
-            } catch (mailError) {
-                console.error('❌ Email Send Failed:', mailError.message);
+        // Timeout of 10 seconds
+        const emailTimeout = new Promise((resolve) => setTimeout(() => resolve('timeout'), 10000));
+
+        try {
+            const result = await Promise.race([emailPromise, emailTimeout]);
+
+            if (result === 'timeout') {
+                console.warn('⚠️ Email sending timed out (proceeding with success response).');
+                // We assume queued success to avoid blocking user
+            } else {
+                console.log('✅ Email sent successfully! MessageID:', result.messageId);
             }
+        } catch (mailError) {
+            console.error('❌ Email Send Failed:', mailError.message);
+            // Return 500 so frontend knows it failed
+            return res.status(500).json({ error: 'Failed to send email. Server authentication error.' });
         }
 
         res.status(200).json({ success: true, message: 'Message received!' });
+
     } catch (error) {
         console.error('💥 Critical Contact Route Error:', error);
         res.status(500).json({ error: 'Something went wrong.' });

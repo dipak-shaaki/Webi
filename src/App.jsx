@@ -40,6 +40,13 @@ function App() {
         const timer = setTimeout(() => {
             setIsLoading(false)
         }, 2000)
+
+        // Pre-warm the backend (Render Free Tier Cold Start Fix)
+        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+        fetch(`${API_BASE}/`)
+            .then(() => console.log('Backend woken up! 🚀'))
+            .catch(() => console.log('Backend waking up...'));
+
         return () => clearTimeout(timer)
     }, [])
 
