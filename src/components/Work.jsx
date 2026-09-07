@@ -175,11 +175,6 @@ const Work = ({ currentPage, onNavigate }) => {
             }}
             className="w-72 sm:w-80 h-64 sm:h-72 rounded-xl overflow-hidden shadow-2xl border border-[#1A1814]/10 bg-[#E0DDD6]"
           >
-            <img
-              src={hoveredProject.image}
-              alt={hoveredProject.title}
-              className="w-full h-full object-cover brightness-90"
-            />
             {/* Blue View Badge */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-16 h-16 rounded-full bg-[#1C3ED3] flex items-center justify-center text-white text-xs font-medium shadow-xl">

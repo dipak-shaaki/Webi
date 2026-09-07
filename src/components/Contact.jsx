@@ -5,7 +5,7 @@ import SocialFooter from './SocialFooter'
 const Contact = ({ currentPage, onNavigate }) => {
   const [hoverEmail, setHoverEmail] = useState(false)
   
-  const kineticWords = ["experiences.", "products.", "solutions.", "interfaces.", "platforms."]
+  const kineticWords = ["experiences.", "products.", "solutions.", "interfaces.", "platforms.", "agents.", "websites."]
   const [kineticIndex, setKineticIndex] = useState(0)
 
   useEffect(() => {

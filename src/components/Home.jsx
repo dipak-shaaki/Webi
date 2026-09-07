@@ -171,7 +171,7 @@ const Home = ({ onNavigate }) => {
         {/* Section Tag Header */}
         <div className="flex justify-center mb-12 sm:mb-16">
           <span className="font-mono text-[10px] sm:text-xs tracking-[0.35em] text-[#1A1814]/60 uppercase border-b border-[#1A1814]/20 pb-1 font-medium">
-            WHAT I DO
+            I WORK ACROSS:
           </span>
         </div>
 
@@ -202,7 +202,7 @@ const Home = ({ onNavigate }) => {
           >
             {/* Underlined orange highlight */}
             <span className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-normal italic text-[#1A1814] tracking-tight leading-none border-b-2 sm:border-b-4 border-[#0755AA] pb-1 sm:pb-2 whitespace-nowrap">
-              AI Agents Dev.
+              Agentic AI & GenAI
             </span>
 
             <span className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#1A1814] tracking-tight leading-none text-center md:text-right whitespace-nowrap">
