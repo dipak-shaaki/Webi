@@ -114,6 +114,7 @@ const Info = ({ currentPage, onNavigate }) => {
           className="w-full px-8 sm:px-16 py-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-10">
           
           <h1 className="font-sans text-[88px] sm:text-[160px] md:text-[220px] font-medium tracking-tighter text-[#1A1814] leading-[0.8] cursor-default shrink-0">
+            <span className="sr-only">Dipak Shanki</span>
             <span className="relative inline-block group">
               D
               <span className="absolute left-1/2 top-full mt-5 -translate-x-1/2 translate-y-2 text-sm sm:text-base font-medium tracking-normal text-[#1A1814]/60 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">

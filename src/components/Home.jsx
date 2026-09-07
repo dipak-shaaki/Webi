@@ -115,6 +115,8 @@ const Home = ({ onNavigate }) => {
         {/* HERO CONTENT - vertically centered, sides */}
         <section className="relative w-full flex-1 flex items-center px-8 sm:px-16 overflow-hidden select-none z-10">
 
+          <h1 className="sr-only">Dipak Shanki — AI Engineer &amp; Full-Stack Developer</h1>
+
           <div className="relative w-full -translate-y-10 sm:translate-y-0 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-10">
 
             {/* Left: Location Text */}
