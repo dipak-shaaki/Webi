@@ -1,206 +1,139 @@
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import SocialFooter from './SocialFooter'
 
-const Contact = () => {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        service: '',
-        message: ''
-    })
+const Contact = ({ currentPage, onNavigate }) => {
+  const [hoverEmail, setHoverEmail] = useState(false)
+  
+  const kineticWords = ["experiences.", "products.", "solutions.", "interfaces.", "platforms."]
+  const [kineticIndex, setKineticIndex] = useState(0)
 
-    const [status, setStatus] = useState('idle') // idle, submitting, success, error
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setKineticIndex(prev => (prev + 1) % kineticWords.length)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.id]: e.target.value })
-    }
+  return (
+    <div className="w-screen h-screen overflow-y-auto scrollbar-hidden bg-[#C6BEB5] text-[#1A1814] font-sans select-none scroll-smooth relative flex flex-col">
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        if (status === 'submitting' || status === 'success') return
-
-        setStatus('submitting')
-
-        const submitRequest = async () => {
-            const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-
-            // 60s timeout for cold starts
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Request timed out')), 60000)
-            );
-
-            const response = await Promise.race([
-                fetch(`${API_BASE}/api/contact`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                }),
-                timeoutPromise
-            ]);
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.error || 'Backend failed,Try again');
-            }
-            return response;
-        };
-
-        try {
-            await submitRequest();
-            // Success
-            setStatus('success')
-            setFormData({ name: '', email: '', service: '', message: '' })
-            setTimeout(() => setStatus('idle'), 5000)
-        } catch (error) {
-            console.warn('First attempt failed:', error.message);
-
-            // Retry once automatically
-            try {
-                await new Promise(r => setTimeout(r, 1000)); // Wait 1s
-                await submitRequest();
-
-                // Success on retry
-                setStatus('success')
-                setFormData({ name: '', email: '', service: '', message: '' })
-                setTimeout(() => setStatus('idle'), 5000)
-            } catch (retryError) {
-                console.error('Final submission error:', retryError)
-                setStatus('error')
-                setTimeout(() => setStatus('idle'), 5000)
-            }
-        }
-    }
-
-    return (
-        <div className="w-full h-full flex items-center justify-center relative bg-cream dark:bg-dark-bg transition-colors duration-500">
-
-            {/* Main Container */}
-            <div className="w-full h-full max-w-[1700px] flex flex-col md:flex-row px-4 md:px-12 pt-16 md:pt-20 pb-16 relative md:scale-[0.8] origin-center">
-
-                {/* LEFT SIDE: The Form */}
-                <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-4 md:px-12 order-2 md:order-1 pt-16 md:pt-0">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        className="w-full max-w-lg"
-                    >
-                        <h2 className="text-3xl md:text-6xl font-grand font-normal text-gray-900 dark:text-white leading-tight mb-8">
-                            Have a project <br /> in mind?
-                        </h2>
-
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {[
-                                { id: 'name', label: '01 — What\'s your name?', placeholder: 'Enter your name *', type: 'text' },
-                                { id: 'email', label: '02 — What\'s your email?', placeholder: 'Enter your email address *', type: 'email' },
-                                { id: 'service', label: '04 — What\'s on your mind?', placeholder: 'Project idea, Work collaboration...', type: 'text' },
-                                { id: 'message', label: '05 — Your message', placeholder: 'Hello Dipak, can you help me with...', type: 'textarea' },
-                            ].map((field) => (
-                                <div key={field.id} className="group relative">
-                                    <label htmlFor={field.id} className="block text-xs md:text-sm font-montserrat text-gray-500 mb-1">
-                                        {field.label}
-                                    </label>
-                                    {field.type === 'textarea' ? (
-                                        <textarea
-                                            id={field.id}
-                                            value={formData[field.id]}
-                                            onChange={handleChange}
-                                            placeholder={field.placeholder}
-                                            required
-                                            className="w-full bg-transparent border-b border-gray-300 dark:border-gray-700 py-2 text-base md:text-lg font-montserrat text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:border-gray-900 dark:focus:border-white transition-all resize-none !bg-opacity-0 autofill:!bg-transparent"
-                                        />
-                                    ) : (
-                                        <input
-                                            type={field.type}
-                                            id={field.id}
-                                            value={formData[field.id]}
-                                            onChange={handleChange}
-                                            placeholder={field.placeholder}
-                                            required
-                                            autoComplete="off"
-                                            className="w-full bg-transparent border-b border-gray-300 dark:border-gray-700 py-2 text-base md:text-lg font-montserrat text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-0 focus:border-gray-900 dark:focus:border-white transition-all !bg-opacity-0 autofill:!bg-transparent"
-                                        />
-                                    )}
-                                </div>
-                            ))}
-
-                            <div className="pt-4 flex flex-col items-start gap-4">
-                                <motion.button
-                                    type="submit"
-                                    disabled={status === 'submitting' || status === 'success'}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className={`relative h-14 md:h-16 px-12 md:px-16 rounded-full font-montserrat font-medium text-base md:text-lg transition-all duration-500 w-max ${status === 'success'
-                                        ? 'bg-green-600 text-white'
-                                        : status === 'error'
-                                            ? 'bg-red-600 text-white'
-                                            : 'bg-blue-600 hover:bg-blue-700 text-white'
-                                        }`}
-                                >
-                                    <AnimatePresence mode="wait">
-                                        {status === 'idle' && <motion.span key="idle">Send</motion.span>}
-                                        {status === 'submitting' && (
-                                            <motion.span key="submitting" className="flex items-center gap-2">
-                                                <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Sending...
-                                            </motion.span>
-                                        )}
-                                        {status === 'success' && <motion.span key="success">✔ Sent!</motion.span>}
-                                        {status === 'error' && <motion.span key="error">Error! Try later</motion.span>}
-                                    </AnimatePresence>
-                                </motion.button>
-
-                                {status === 'error' && (
-                                    <p className="text-[10px] font-montserrat text-red-500 bg-white/10 p-2 rounded">
-                                        Server is currently offline. Please try again later or reach out via email.
-                                    </p>
-                                )}
-                            </div>
-                        </form>
-                    </motion.div>
-                </div>
-
-                {/* RIGHT SIDE: Info */}
-                <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-4 md:px-12 order-1 md:order-2 space-y-8 mt-12 md:mt-0">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                    >
-                        <h1 className="text-[4rem] md:text-[7rem] lg:text-[9rem] font-grand font-normal text-gray-900 dark:text-[#ECE7C1] leading-[0.8] mb-8">
-                            Hello.
-                        </h1>
-
-                        <div className="space-y-6 font-montserrat font-light text-gray-800 dark:text-gray-300 text-base md:text-lg max-w-md leading-relaxed">
-                            <p>
-                                Looking to turn your idea into a powerful web experience? Get in touch.
-                            </p>
-
-                            <div className="space-y-1 pt-4">
-                                <p className="font-medium text-gray-500 text-xs uppercase tracking-wide mb-1">Email:</p>
-                                <a href="mailto:shanki.dipak@gmail.com" className="block text-gray-900 dark:text-white border-b border-gray-900 dark:border-white pb-0.5 w-max hover:opacity-70 transition-opacity">
-                                    shanki.dipak@gmail.com
-                                </a>
-                            </div>
-
-                            <div className="flex gap-4 pt-4">
-                                <a href="https://www.linkedin.com/in/dipak-shanki/" target="_blank" rel="noopener noreferrer" className="text-gray-900 dark:text-white border-b border-gray-900 dark:border-white pb-0.5 hover:opacity-70 transition-opacity font-montserrat text-sm">
-                                    LinkedIn
-                                </a>
-                                <a href="https://github.com/dipak-shaaki" target="_blank" rel="noopener noreferrer" className="text-gray-900 dark:text-white border-b border-gray-900 dark:border-white pb-0.5 hover:opacity-70 transition-opacity font-montserrat text-sm">
-                                    Github
-                                </a>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-
-            </div>
+      {/* STICKY HEADER (Standardized for zero shift) */}
+      <header className="sticky top-0 inset-x-0 h-[76px] sm:h-[104px] pt-4 sm:pt-8 pb-6 px-4 sm:px-16 grid grid-cols-2 gap-y-3 sm:flex sm:justify-between items-start z-50 bg-transparent relative">
+        <div className="flex gap-4 sm:gap-10 md:gap-24">
+          <button onClick={() => onNavigate && onNavigate('info')} className="group text-left focus:outline-none cursor-pointer">
+              <h2 className="text-lg sm:text-3xl whitespace-nowrap font-medium text-[#1A1814] hover:text-[#0755AA] transition-colors leading-none">About</h2>
+          </button>
+          <button onClick={() => onNavigate && onNavigate('work')} className="group text-left focus:outline-none cursor-pointer">
+              <h2 className="text-lg sm:text-3xl whitespace-nowrap font-medium text-[#1A1814] hover:text-[#0755AA] transition-colors leading-none">Work</h2>
+          </button>
         </div>
-    )
+
+        {/* Centered home button */}
+        <div className="fixed left-[46%] -translate-x-1/2 top-3 sm:left-1/2 sm:top-9 z-[60]">
+          <button
+            onClick={() => onNavigate && onNavigate('home')}
+            className="text-[10px] whitespace-nowrap tracking-[0.12em] text-[#1A1814]/50 hover:text-[#1A1814] transition-colors uppercase focus:outline-none cursor-pointer"
+          >
+                HOME
+          </button>
+        </div>
+
+        <div className="col-start-2 justify-self-end flex gap-3 sm:gap-10 md:gap-24">
+          <button onClick={() => onNavigate && onNavigate('playground')} className="group text-left focus:outline-none cursor-pointer">
+              <h2 className="text-lg sm:text-3xl whitespace-nowrap font-medium text-[#1A1814] hover:text-[#0755AA] transition-colors leading-none">Explore</h2>
+          </button>
+          <button onClick={() => onNavigate && onNavigate('contact')} className="group text-left focus:outline-none cursor-pointer">
+              <h2 className={`text-lg sm:text-3xl whitespace-nowrap font-medium leading-none ${currentPage === 'contact' ? 'text-[#0755AA] underline underline-offset-8 decoration-2' : 'text-[#1A1814]'}`}>Contact</h2>
+          </button>
+        </div>
+      </header>
+
+      {/* MAIN TYPOGRAPHIC HERO — RESPONSIVE */}
+      <main className="flex-1 flex flex-col justify-center px-4 sm:px-8 md:px-12 lg:px-16 pt-4 pb-12 max-w-[1400px] mx-auto w-full">
+
+        {/* Line 1: Let's make *something* great! */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="flex items-baseline gap-x-2 sm:gap-x-4 leading-none mb-4 sm:mb-6 whitespace-nowrap"
+        >
+          <span className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-[90px] font-normal text-[#1A1814] leading-none tracking-tight">
+            Let's Build
+          </span>
+          <span className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-[90px] font-normal text-[#1A1814] leading-none tracking-tight">
+            Something That Matters!
+          </span>
+
+        </motion.div>
+
+        {/* Line 2: [Reach out oval] + email */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-wrap items-center gap-x-4 sm:gap-x-8 gap-y-4 mb-4 sm:mb-6"
+        >
+          {/* Oval Reach out button */}
+          <a
+            href="mailto:shanki.dipak@gmail.com"
+            className="inline-flex items-center justify-center px-6 sm:px-10 py-3 sm:py-5 rounded-full border-2 border-[#1A1814] text-[#1A1814] text-lg sm:text-2xl md:text-3xl font-normal hover:bg-[#1A1814] hover:text-[#F0EDE6] transition-all duration-300 shrink-0"
+          >
+            Reach out
+          </a>
+
+          {/* Email */}
+          <a
+            href="mailto:shanki.dipak@gmail.com"
+            onMouseEnter={() => setHoverEmail(true)}
+            onMouseLeave={() => setHoverEmail(false)}
+            className="text-2xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-[90px] font-normal text-[#0755AA] leading-none tracking-tight underline underline-offset-4 sm:underline-offset-8 decoration-[#0755AA]/40 hover:decoration-[#0755AA] transition-all duration-300 break-all sm:break-normal"
+          >
+            shanki.dipak@gmail.com
+          </a>
+        </motion.div>
+
+        {/* Line 3: for —wonderful— experiences. ✶ */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-wrap items-baseline gap-x-3 sm:gap-x-6 gap-y-2"
+        >
+          <span className="text-4xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[120px] font-normal text-[#1A1814] leading-none tracking-tight">
+            for
+          </span>
+
+          {/* Inline "wonderful" text with lines */}
+          <span className="inline-flex items-center gap-2 sm:gap-3 self-center">
+            <span className="block w-8 sm:w-16 md:w-24 h-[1px] sm:h-[2px] bg-[#1A1814]/40" />
+            <span className="text-sm sm:text-xl md:text-2xl font-normal italic text-[#1A1814]/60 tracking-wide">wonderful</span>
+            <span className="block w-8 sm:w-16 md:w-24 h-[1px] sm:h-[2px] bg-[#1A1814]/40" />
+          </span>
+
+          <div className="text-4xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[120px] font-normal text-[#1A1814] leading-none tracking-tight h-[1em] overflow-hidden flex items-end">
+            <AnimatePresence mode="wait">
+              <motion.span 
+                key={kineticWords[kineticIndex]}
+                initial={{ opacity: 0, y: 15, rotateX: -45 }} 
+                animate={{ opacity: 1, y: 0, rotateX: 0 }} 
+                exit={{ opacity: 0, y: -15, rotateX: 45 }}
+                transition={{ duration: 0.45, ease: 'easeOut' }} 
+                className="block text-[#0755AA]"
+              >
+                {kineticWords[kineticIndex]}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+      </main>
+
+      <SocialFooter />
+
+    </div>
+  )
 }
 
 export default Contact

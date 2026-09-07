@@ -3,40 +3,58 @@
 @tailwind utilities;
 
 @layer base {
-    body {
-        @apply font-sans antialiased bg-cream dark:bg-dark-bg text-gray-900 dark:text-dark-text overflow-hidden;
-    }
+  /* Bricolage Grotesque — universal typeface */
+  *, *::before, *::after {
+    font-family: 'Bricolage Grotesque', sans-serif;
+  }
+
+  /* Optical size axis — larger text gets display variant */
+  html {
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Smart weight scale:
+     - Body / labels      → 300-400 (light, clean)
+     - UI buttons / caps  → 500-600 (medium)
+     - Section headings   → 600-700 (semibold)
+     - Display / hero     → 700-800 (bold/extrabold)
+  */
+  p, li, span, td     { font-weight: 300; }
+  h4, h5, h6          { font-weight: 500; }
+  h3                  { font-weight: 600; }
+  h2                  { font-weight: 600; }
+  h1                  { font-weight: 700; }
+
+  /* Monospace labels keep same font but with tighter tracking */
+  code, pre, .font-mono {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    letter-spacing: 0.05em;
+  }
 }
 
-/* Force GrandSlang */
-.font-grand {
-    font-family: 'GrandSlang-Roman', 'Times New Roman', serif !important;
-}
-
-/* Force Montserrat */
-.font-montserrat {
-    font-family: 'Montserrat', sans-serif !important;
-}
-
-@layer base {
-
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    textarea:-webkit-autofill,
-    textarea:-webkit-autofill:hover,
-    textarea:-webkit-autofill:focus {
-        -webkit-text-fill-color: inherit !important;
-        -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
-        transition: background-color 5000s ease-in-out 0s !important;
-    }
-}
-
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-
-.no-scrollbar {
+@layer utilities {
+  .scrollbar-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hover-text-fill {
+    background-image: linear-gradient(to right, #88D4E8, #88E5BE);
+    background-size: 0% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: background-size 0.4s ease, color 0.4s ease, -webkit-text-fill-color 0.4s ease;
+  }
+  
+  .hover-text-fill:hover {
+    background-size: 100% 100%;
+    -webkit-text-fill-color: #88D4E8;
+  }
 }

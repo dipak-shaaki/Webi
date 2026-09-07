@@ -8,10 +8,13 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                'grand': ['GrandSlang-Roman', 'serif'],
-                'montserrat': ['Montserrat', 'sans-serif'], // Added Montserrat
-                'sans': ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
-                'serif': ['GrandSlang-Roman', 'serif'],
+                // Bricolage Grotesque as the universal typeface
+                'sans':      ['"Bricolage Grotesque"', 'sans-serif'],
+                'bricolage': ['"Bricolage Grotesque"', 'sans-serif'],
+                // Keep fraunces alias pointing to Bricolage so existing classes still work
+                'fraunces':  ['"Bricolage Grotesque"', 'sans-serif'],
+                'mono':      ['"Bricolage Grotesque"', 'monospace'],
+                'general':   ['"Bricolage Grotesque"', 'sans-serif'],
             },
             colors: {
                 'cream': '#f5f1e8',

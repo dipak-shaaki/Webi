@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'node:crypto';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
@@ -54,6 +55,28 @@ const profileSchema = new mongoose.Schema({
     bio: String
 });
 const Profile = mongoose.model('Profile', profileSchema);
+
+// Private relationship profiles used by the identity discovery flow.
+const knownPersonSchema = new mongoose.Schema({
+    displayName: { type: String, required: true },
+    aliases: [String],
+    initials: [String],
+    relationshipType: { type: String, enum: ['friend', 'family', 'school', 'plusTwo', 'bachelors', 'work', 'stranger'], default: 'stranger' },
+    contexts: [String],
+    memories: [String],
+    tone: String,
+    isActive: { type: Boolean, default: true }
+}, { timestamps: true });
+const KnownPerson = mongoose.model('KnownPerson', knownPersonSchema);
+
+const identitySessionSchema = new mongoose.Schema({
+    sessionId: { type: String, required: true, unique: true },
+    answers: [{ questionId: String, value: String }],
+    candidateIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'KnownPerson' }],
+    status: { type: String, enum: ['active', 'matched', 'unknown'], default: 'active' },
+    matchedPersonId: { type: mongoose.Schema.Types.ObjectId, ref: 'KnownPerson', default: null }
+}, { timestamps: true });
+const IdentitySession = mongoose.model('IdentitySession', identitySessionSchema);
 
 const memeSchema = new mongoose.Schema({
     trigger: { type: String, required: true, lowercase: true },
@@ -174,11 +197,99 @@ ${examples}
 `;
 };
 
+const identityQuestions = [
+    { id: 'relationship', prompt: 'How do you know Dipak?' },
+    { id: 'initials', prompt: 'What are your initials?' },
+    { id: 'context', prompt: 'Where did you meet him?' },
+    { id: 'personality', prompt: 'What kind of person is he around you?' }
+];
+
+const normalizeAnswer = (value = '') => value.trim().toLowerCase();
+
+const scoreKnownPerson = (person, answers) => {
+    let score = 0;
+    const relationship = normalizeAnswer(answers.relationship);
+    const initials = normalizeAnswer(answers.initials);
+    const context = normalizeAnswer(answers.context);
+    const personality = normalizeAnswer(answers.personality);
+
+    if (relationship && relationship.includes(normalizeAnswer(person.relationshipType))) score += 4;
+    if (initials && person.initials.some(item => initials.includes(normalizeAnswer(item)))) score += 5;
+    if (context && person.contexts.some(item => context.includes(normalizeAnswer(item)) || normalizeAnswer(item).includes(context))) score += 4;
+    if (personality && person.tone && normalizeAnswer(person.tone).split(/\s+/).some(word => word.length > 3 && personality.includes(word))) score += 1;
+    return score;
+};
+
+app.post('/api/identity/start', async (req, res) => {
+    try {
+        const sessionId = crypto.randomUUID();
+        let candidateIds = [];
+        if (mongoose.connection.readyState === 1) {
+            candidateIds = await KnownPerson.find({ isActive: true }).distinct('_id');
+            await IdentitySession.create({ sessionId, candidateIds });
+        }
+
+        res.json({ sessionId, question: identityQuestions[0], totalQuestions: identityQuestions.length });
+    } catch (error) {
+        res.status(500).json({ error: 'Unable to start identity discovery.' });
+    }
+});
+
+app.post('/api/identity/answer', async (req, res) => {
+    const { sessionId, questionId, answer } = req.body;
+    if (!sessionId || !questionId || !answer) return res.status(400).json({ error: 'Session, question, and answer are required.' });
+
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.json({ nextQuestion: identityQuestions.findIndex(question => question.id === questionId) < identityQuestions.length - 1 ? identityQuestions[1] : null, status: 'unknown' });
+        }
+
+        const session = await IdentitySession.findOne({ sessionId });
+        if (!session) return res.status(404).json({ error: 'Identity session not found.' });
+
+        const existingAnswer = session.answers.find(item => item.questionId === questionId);
+        if (existingAnswer) existingAnswer.value = answer;
+        else session.answers.push({ questionId, value: answer });
+
+        const answers = Object.fromEntries(session.answers.map(item => [item.questionId, item.value]));
+        const questionIndex = identityQuestions.findIndex(question => question.id === questionId);
+        const nextQuestion = identityQuestions[questionIndex + 1] || null;
+
+        if (nextQuestion) {
+            await session.save();
+            return res.json({ nextQuestion, progress: questionIndex + 1, totalQuestions: identityQuestions.length, status: 'active' });
+        }
+
+        const candidates = await KnownPerson.find({ _id: { $in: session.candidateIds }, isActive: true });
+        const ranked = candidates
+            .map(person => ({ person, score: scoreKnownPerson(person, answers) }))
+            .sort((left, right) => right.score - left.score);
+        const winner = ranked[0];
+        const isMatch = winner && winner.score >= 5;
+
+        session.status = isMatch ? 'matched' : 'unknown';
+        session.matchedPersonId = isMatch ? winner.person._id : null;
+        await session.save();
+
+        res.json({
+            status: session.status,
+            confidence: isMatch ? Math.min(Math.round((winner.score / 14) * 100), 99) : 0,
+            result: isMatch ? `You might be ${winner.person.displayName}.` : 'I could not confidently identify your connection yet.',
+            relationshipType: isMatch ? winner.person.relationshipType : 'stranger',
+            nextQuestion: null
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Unable to process identity answer.' });
+    }
+});
+
 app.post('/api/chat', async (req, res) => {
     const { message, history, userId = 'anonymous' } = req.body;
     if (!message) return res.status(400).json({ error: 'Message is required' });
 
     console.log(`[Chat] Incoming from ${userId}: "${message.substring(0, 50)}..."`);
+
+    return res.json({ reply: 'Under construction. Will be available soon.' });
 
     try {
         const lowerMsg = message.toLowerCase();

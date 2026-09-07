@@ -7,6 +7,7 @@ export default defineConfig({
     base: '/',
     server: {
         port: 3000,
+        allowedHosts: ['same-navigate-nutrient.ngrok-free.dev'],
         open: true
     },
     build: {
