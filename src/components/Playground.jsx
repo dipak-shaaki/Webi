@@ -111,7 +111,7 @@ const Playground = ({ currentPage, onNavigate }) => {
 
   const startUnknownChat = () => {
     setConversationMode('chat')
-    setChatMessages([{ role: 'ai', content: 'You do not know me yet? Fair enough. I am Dipak. What brings you here?' }])
+    setChatMessages([{ role: 'ai', content: 'Hello, I am Dipak. What brings you here?' }])
   }
 
   const startMatchedChat = () => {
@@ -280,7 +280,7 @@ const Playground = ({ currentPage, onNavigate }) => {
                   <>
                     <p className="font-mono text-[10px] tracking-[0.2em] text-[#0755AA] uppercase mb-5">{channel === 'voice' ? 'Voice agent' : 'Text chatbot'}</p>
                     <h2 className="text-3xl sm:text-4xl font-normal leading-tight">Do you know Dipak?</h2>
-                    <p className="mt-4 text-sm sm:text-base text-[#1A1814]/65 leading-relaxed">Choose a relationship path, then {channel === 'voice' ? 'speak' : 'chat'} with the clone.</p>
+                    <p className="mt-4 text-sm sm:text-base text-[#1A1814]/65 leading-relaxed">Whic wa, then {channel === 'voice' ? 'speak' : 'chat'} with the clone.</p>
                     <div className="mt-8 grid sm:grid-cols-2 gap-3">
                       <button onClick={startDiscovery} disabled={isStarting} className="bg-[#1A1814] text-[#E8E5DE] px-5 py-4 text-sm text-left hover:bg-[#0755AA] transition-colors disabled:opacity-50">{isStarting ? 'Starting...' : 'I know Dipak'}</button>
                       <button onClick={startUnknownChat} className="border border-[#1A1814]/30 px-5 py-4 text-sm text-left hover:border-[#0755AA] transition-colors">I don’t know him</button>
