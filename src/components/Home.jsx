@@ -143,7 +143,7 @@ const Home = ({ onNavigate }) => {
             >
               <div className="flex flex-col gap-2">
                    <h3 className="text-xl sm:text-2xl md:text-3xl text-white font-semibold leading-tight drop-shadow-md">
-                     AI/ML Engineer &
+                     AI Engineer &
                 </h3>
                 <p className="text-lg sm:text-xl md:text-3xl text-white/90 font-normal leading-snug drop-shadow-md">
                      Developer
